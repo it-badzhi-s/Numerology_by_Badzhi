@@ -16,7 +16,7 @@ from telegram.ext import (
 )
 
 from config import BOT_TOKEN
-from handlers.menu import start_command, menu_command, show_menu, info_callback
+from handlers.menu import start_command, menu_command, show_menu, info_callback, check_subscription_callback
 from handlers.calculations import (
     calc_phone_start, calc_phone_process,
     calc_address_start, calc_address_process,
@@ -82,6 +82,7 @@ def main():
     # === CALLBACK ОБРАБОТЧИКИ ===
     application.add_handler(CallbackQueryHandler(show_menu, pattern="^menu$"))
     application.add_handler(CallbackQueryHandler(info_callback, pattern="^info$"))
+    application.add_handler(CallbackQueryHandler(check_subscription_callback, pattern="^check_subscription$"))
     
     # Запуск бота
     logger.info("🚀 Бот запущен и готов к работе!")

@@ -15,6 +15,9 @@ if not BOT_TOKEN:
     except ImportError:
         pass
 
+# Канал для обязательной подписки (без @ в начале)
+REQUIRED_CHANNEL = os.getenv("REQUIRED_CHANNEL", "@your_channel")  # Замените на @your_channel
+
 # Текстовые константы
 WELCOME_MESSAGE = """
 🔮 Добро пожаловать в Нумерологический Бот!

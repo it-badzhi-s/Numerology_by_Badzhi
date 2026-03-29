@@ -1,7 +1,8 @@
 # handlers/menu.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from config import WELCOME_MESSAGE, MENU_TEXT
+from telegram.error import BadRequest
+from config import WELCOME_MESSAGE, MENU_TEXT, REQUIRED_CHANNEL
 
 
 def get_main_menu_keyboard():
@@ -15,20 +16,76 @@ def get_main_menu_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
+def get_subscription_keyboard():
+    """Создаёт клавиатуру с кнопкой подписки"""
+    keyboard = [
+        [InlineKeyboardButton(f"📢 Подписаться на канал", url=f"https://t.me/{REQUIRED_CHANNEL.lstrip('@')}")],
+        [InlineKeyboardButton("✅ Я подписался", callback_data="check_subscription")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+async def check_subscription(user_id: int, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Проверяет подписку пользователя на канал"""
+    try:
+        chat_member = await context.bot.get_chat_member(chat_id=REQUIRED_CHANNEL, user_id=user_id)
+        # Пользователь подписан если статус: member, administrator, creator
+        return chat_member.status in ["member", "administrator", "creator"]
+    except BadRequest:
+        # Если бот не имеет прав доступа к каналу
+        return False
+    except Exception as e:
+        print(f"Ошибка проверки подписки: {e}")
+        return False
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /start"""
-    await update.message.reply_text(
-        WELCOME_MESSAGE + "\n" + MENU_TEXT,
-        reply_markup=get_main_menu_keyboard()
-    )
+    user_id = update.effective_user.id
+
+    # Проверяем подписку на канал
+    is_subscribed = await check_subscription(user_id, context)
+
+    if not is_subscribed:
+        # Если канал не настроен, пропускаем проверку
+        if REQUIRED_CHANNEL == "@your_channel":
+            await update.message.reply_text(
+                WELCOME_MESSAGE + "\n" + MENU_TEXT,
+                reply_markup=get_main_menu_keyboard()
+            )
+        else:
+            # Показываем сообщение с требованием подписки
+            await update.message.reply_text(
+                f"🔒 **Добро пожаловать!**\n\n"
+                f"Для использования бота необходимо подписаться на наш канал:\n"
+                f"📢 {REQUIRED_CHANNEL}\n\n"
+                f"Нажмите кнопку ниже, чтобы подписаться, затем нажмите '✅ Я подписался' для проверки.",
+                reply_markup=get_subscription_keyboard(),
+                parse_mode="Markdown"
+            )
+    else:
+        # Пользователь подписан - показываем меню
+        await update.message.reply_text(
+            WELCOME_MESSAGE + "\n" + MENU_TEXT,
+            reply_markup=get_main_menu_keyboard()
+        )
 
 
 async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /menu"""
-    await update.message.reply_text(
-        MENU_TEXT,
-        reply_markup=get_main_menu_keyboard()
-    )
+    user_id = update.effective_user.id
+    is_subscribed = await check_subscription(user_id, context)
+
+    if not is_subscribed and REQUIRED_CHANNEL != "@your_channel":
+        await update.message.reply_text(
+            f"🔒 Требуется подписка на канал: {REQUIRED_CHANNEL}",
+            reply_markup=get_subscription_keyboard()
+        )
+    else:
+        await update.message.reply_text(
+            MENU_TEXT,
+            reply_markup=get_main_menu_keyboard()
+        )
 
 
 async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -42,11 +99,34 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def check_subscription_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Callback для проверки подписки после нажатия кнопки"""
+    query = update.callback_query
+    await query.answer()
+
+    user_id = update.effective_user.id
+    is_subscribed = await check_subscription(user_id, context)
+
+    if is_subscribed:
+        await query.edit_message_text(
+            "✅ **Спасибо за подписку!**\n\n" + WELCOME_MESSAGE + "\n" + MENU_TEXT,
+            reply_markup=get_main_menu_keyboard(),
+            parse_mode="Markdown"
+        )
+    else:
+        await query.edit_message_text(
+            f"❌ Вы не подписались на канал!\n\n"
+            f"Пожалуйста, подпишитесь на {REQUIRED_CHANNEL} и нажмите '✅ Я подписался' снова.\n\n"
+            f"Убедитесь, что вы действительно подписались!",
+            reply_markup=get_subscription_keyboard()
+        )
+
+
 async def info_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показывает информацию о боте"""
     query = update.callback_query
     await query.answer()
-    
+
     info_text = """
 ℹ️ О боте:
 
@@ -59,9 +139,9 @@ async def info_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 Для возврата в меню нажмите кнопку ниже.
     """
-    
+
     keyboard = [[InlineKeyboardButton("◀️ Вернуться в меню", callback_data="menu")]]
-    
+
     await query.edit_message_text(
         info_text,
         reply_markup=InlineKeyboardMarkup(keyboard)
