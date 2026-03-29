@@ -21,8 +21,10 @@ ENV/
 .AppleDouble
 .LSOverride
 
-# Токен бота (ВАЖНО!)
-config.py
+# Локальный config.py с токеном (для разработки)
+# config.py теперь в git с безопасным кодом
+# config.local.py - локальный файл с реальным токеном (исключается)
+config.local.py
 
 # Но оставляем пример конфигурации
 !config.example.py
