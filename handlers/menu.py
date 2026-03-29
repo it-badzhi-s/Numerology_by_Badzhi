@@ -62,19 +62,34 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         else:
             # Показываем сообщение с требованием подписки
+            subscription_message = f"""🔮 **Добро пожаловать в Нумерологический Бот!**
+
+Я помогу вам узнать тайны чисел и их влияние на вашу жизнь.
+
+📋 **Что я умею:**
+• Расчёт по номеру телефона
+• Расчёт по адресу проживания
+• Расчёт по дате рождения
+
+⚠️ **Важно!** Для работы бота необходимо подписаться на наш канал.
+
+🔗 **Инструкция:**
+1️⃣ Нажмите кнопку ниже → подпишитесь на канал
+2️⃣ Вернитесь и нажмите «✅ Я подписался»
+3️⃣ Готово! Меню бота откроется автоматически
+
+"""
             await update.message.reply_text(
-                f"🔒 **Добро пожаловать!**\n\n"
-                f"Для использования бота необходимо подписаться на наш канал:\n"
-                f"📢 {REQUIRED_CHANNEL}\n\n"
-                f"Нажмите кнопку ниже, чтобы подписаться, затем нажмите '✅ Я подписался' для проверки.",
+                subscription_message,
                 reply_markup=get_subscription_keyboard(),
                 parse_mode="Markdown"
             )
     else:
         # Пользователь подписан - показываем меню
         await update.message.reply_text(
-            WELCOME_MESSAGE + "\n" + MENU_TEXT,
-            reply_markup=get_main_menu_keyboard()
+            "✅ **Спасибо за подписку!**\n\n" + WELCOME_MESSAGE + "\n" + MENU_TEXT,
+            reply_markup=get_main_menu_keyboard(),
+            parse_mode="Markdown"
         )
 
 
@@ -85,7 +100,8 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not is_subscribed and REQUIRED_CHANNEL != "@your_channel":
         await update.message.reply_text(
-            f"🔒 Требуется подписка на канал: {REQUIRED_CHANNEL}",
+            "⚠️ Для доступа к меню необходимо подписаться на канал!\n\n"
+            "Нажмите кнопку ниже и следуйте инструкции.",
             reply_markup=get_subscription_keyboard()
         )
     else:
@@ -115,16 +131,24 @@ async def check_subscription_callback(update: Update, context: ContextTypes.DEFA
     is_subscribed = await check_subscription(user_id, context)
 
     if is_subscribed:
+        success_message = """✅ **Отлично, вы подписались!**
+
+Добро пожаловать в Нумерологический Бот!
+
+"""
         await query.edit_message_text(
-            "✅ **Спасибо за подписку!**\n\n" + WELCOME_MESSAGE + "\n" + MENU_TEXT,
+            success_message + WELCOME_MESSAGE + "\n" + MENU_TEXT,
             reply_markup=get_main_menu_keyboard(),
             parse_mode="Markdown"
         )
     else:
         await query.edit_message_text(
-            f"❌ Вы не подписались на канал!\n\n"
-            f"Пожалуйста, подпишитесь на {REQUIRED_CHANNEL} и нажмите '✅ Я подписался' снова.\n\n"
-            f"Убедитесь, что вы действительно подписались!",
+            "❌ **Подписка не обнаружена!**\n\n"
+            "Пожалуйста, убедитесь что вы:\n"
+            "1️⃣ Нажали кнопку «📢 Подписаться на канал»\n"
+            "2️⃣ Действительно подписались (кнопка «Вступить»)\n"
+            "3️⃣ Вернулись и нажали «✅ Я подписался»\n\n"
+            "Попробуйте ещё раз!",
             reply_markup=get_subscription_keyboard()
         )
 
