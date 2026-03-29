@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Токен бота (ВАЖНО!)
+config.py
+
+# Но оставляем пример конфигурации
+!config.example.py
+
+# Логи
+*.log
+
+# Временные файлы
+*.tmp
+*.bak
