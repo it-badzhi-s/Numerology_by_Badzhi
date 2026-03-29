@@ -2,7 +2,7 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from telegram.error import BadRequest
-from config import WELCOME_MESSAGE, MENU_TEXT, REQUIRED_CHANNEL
+from config import WELCOME_MESSAGE, MENU_TEXT, REQUIRED_CHANNEL, CHANNEL_INVITE_LINK
 
 
 def get_main_menu_keyboard():
@@ -18,8 +18,15 @@ def get_main_menu_keyboard():
 
 def get_subscription_keyboard():
     """Создаёт клавиатуру с кнопкой подписки"""
+    # Если это публичный канал (начинается с @)
+    if str(REQUIRED_CHANNEL).startswith("@"):
+        channel_url = f"https://t.me/{REQUIRED_CHANNEL.lstrip('@')}"
+    else:
+        # Для приватного канала используем пригласительную ссылку
+        channel_url = CHANNEL_INVITE_LINK
+
     keyboard = [
-        [InlineKeyboardButton(f"📢 Подписаться на канал", url=f"https://t.me/{REQUIRED_CHANNEL.lstrip('@')}")],
+        [InlineKeyboardButton("📢 Подписаться на канал", url=channel_url)],
         [InlineKeyboardButton("✅ Я подписался", callback_data="check_subscription")],
     ]
     return InlineKeyboardMarkup(keyboard)

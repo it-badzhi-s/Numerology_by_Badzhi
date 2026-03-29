@@ -15,8 +15,13 @@ if not BOT_TOKEN:
     except ImportError:
         pass
 
-# Канал для обязательной подписки (без @ в начале)
-REQUIRED_CHANNEL = os.getenv("REQUIRED_CHANNEL", "@your_channel")  # Замените на @your_channel
+# Канал для обязательной подписки
+# Для публичного канала: "@channelname"
+# Для приватного канала: "-1001234567890" (Chat ID)
+REQUIRED_CHANNEL = os.getenv("REQUIRED_CHANNEL", "-1003648407179")
+
+# Пригласительная ссылка на канал (для приватных каналов)
+CHANNEL_INVITE_LINK = os.getenv("CHANNEL_INVITE_LINK", "https://t.me/+1OtCMx8zhaY0NzVi")
 
 # Текстовые константы
 WELCOME_MESSAGE = """
